@@ -1,113 +1,269 @@
-import Image from "next/image";
+"use client";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+} from "react";
+import { Room, Guest, Allocation, RoomAllocationProps, RoomPanelProps } from "./type";
+import { CustomInputNumber } from "./CustomInputNumber";
 
-export default function Home() {
+// 處理輸入框失焦事件
+const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  console.log(`Blur event on input: ${e.target.name}`);
+};
+
+// 計算房間價格
+const calculateRoomPrice = (
+  room: Room,
+  adults: number,
+  children: number
+): number =>
+  room.roomPrice + room.adultPrice * adults + room.childPrice * children;
+
+// 檢查分配是否有效
+const isValidAllocation = (allocation: Allocation[]): boolean => {
+  for (const { child, adult } of allocation) {
+    // 如果房間裡有小孩但是沒有大人，則分配無效
+    if (child > 0 && adult === 0) return false;
+  }
+  return true;
+};
+
+const RoomPanel: React.FC<RoomPanelProps> = ({
+  key,
+  allocation,
+  onChange
+}) => {
+  const [panelState, setPanelState] = useState({
+    adult: allocation.adult,
+    child: allocation.child
+  })
+
+  const handleAdultChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newAdult = parseInt(e.target.value);
+    const newState = { ...panelState, adult: newAdult };
+    setPanelState(newState);
+    onChange({
+      ...allocation,
+      adult: newAdult,
+      // price: calculateRoomPrice(allocation, newAdult, newState.child),
+    });
+  };
+
+  const handleChildChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newChild = parseInt(e.target.value);
+    const newState = { ...panelState, child: newChild };
+    setPanelState(newState);
+    onChange({
+      ...allocation,
+      child: newChild,
+      // price: calculateRoomPrice(allocation, newState.adult, newChild),
+    });
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div key={key} className="border my-2 p-2">
+      <p>{`此房間上限總人數${allocation.capacity}`}</p>
+      <p>{`目前總人數：${allocation.adult + allocation.child}人`}</p>
+      <div className="flex flex-row justify-between my-1">
+        <div>
+          <p>大人</p>
+          <p className="text-neutral-400">年齡20+</p>
         </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+        <CustomInputNumber
+          min={1}
+          max={allocation.capacity - panelState.child}
+          step={1}
+          name={`adult-${key}`}
+          value={panelState.adult}
+          // onChange={(e) => {
+          //   console.log('e', e)
+          //   setPanelState({
+          //   child: panelState.child,
+          //   adult: parseInt(e.target.value)})}}
+          onChange={handleAdultChange}
+          // onBlur={(e) => {
+          //   handleInputBlur(e);
+          // }}
+          onBlur={()=> {}}
         />
       </div>
+      <div className="flex flex-row justify-between">
+        <p>小孩</p>
+        <CustomInputNumber
+          min={0}
+          max={allocation.capacity - panelState.adult}
+          step={1}
+          name={`child-${key}`}
+          value={panelState.child}
+          // onChange={(e) => {
+          //   console.log('e', e)
+          //   setPanelState({
+          //   adult: panelState.adult,
+          //   child: parseInt(e.target.value)})}}
+          onChange={handleChildChange}
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+          // onBlur={(e) => {
+          //   handleInputBlur(e);
+          // }}
+          onBlur={()=>{}}
+        />
       </div>
-    </main>
+    </div>
+  );
+};
+
+// 計算最低價格分配方案/預設方案
+const getDefaultRoomAllocation = (
+  guest: Guest,
+  rooms: Room[]
+): Allocation[] => {
+  const { adult: totalAdults, child: totalChildren } = guest;
+  const roomCount = rooms.length;
+  const initialAllocation: Allocation[] = rooms.map((room) => ({
+    adult: 0,
+    child: 0,
+    price: room.roomPrice,
+    capacity: room.capacity,
+  }));
+  let minTotalPrice = Infinity;
+  let bestAllocation: Allocation[] = [];
+
+  // 遞迴尋找最小價格的分配方案
+  const findMinimumPrice = (
+    index: number,
+    remainingAdults: number,
+    remainingChildren: number,
+    currentAllocation: Allocation[],
+    currentPrice: number
+  ) => {
+    // 基本情況：如果所有成人和小孩都已經分配完畢
+    if (remainingAdults === 0 && remainingChildren === 0) {
+      // 當所有成人和小孩都已分配完畢時，檢查當前方案是否有效，並更新最優方案
+      if (isValidAllocation(currentAllocation)) {
+        if (currentPrice < minTotalPrice) {
+          minTotalPrice = currentPrice;
+          bestAllocation = [...currentAllocation];
+        }
+      }
+      return;
+    }
+
+    // 遍歷所有剩餘的房間
+    for (let i = index; i < roomCount; i++) {
+      const room = rooms[i];
+      const { capacity } = room;
+
+      // 試圖在當前房間中分配成人和小孩
+      for (
+        let adultsInRoom = 0;
+        adultsInRoom <= Math.min(remainingAdults, capacity);
+        adultsInRoom++
+      ) {
+        for (
+          let childrenInRoom = 0;
+          childrenInRoom <=
+          Math.min(remainingChildren, capacity - adultsInRoom);
+          childrenInRoom++
+        ) {
+          // 如果房間裡有小孩但是沒有大人，則跳過該方案
+          if (childrenInRoom > 0 && adultsInRoom === 0) continue;
+
+          const price = calculateRoomPrice(room, adultsInRoom, childrenInRoom);
+          const newAllocation = [...currentAllocation];
+          newAllocation[i] = {
+            adult: adultsInRoom,
+            child: childrenInRoom,
+            price,
+            capacity,
+          };
+
+          // 遞迴處理下一個房間
+          findMinimumPrice(
+            i + 1,
+            remainingAdults - adultsInRoom,
+            remainingChildren - childrenInRoom,
+            newAllocation,
+            currentPrice + price
+          );
+        }
+      }
+    }
+  };
+
+  findMinimumPrice(0, totalAdults, totalChildren, initialAllocation, 0);
+  return bestAllocation;
+};
+
+const RoomAllocation: React.FC<RoomAllocationProps> = ({
+  guest,
+  rooms,
+  onChange,
+}) => {
+  const { adult, child } = guest;
+  const [allocations, setAllocations] = useState<Allocation[]>(() =>
+    getDefaultRoomAllocation(guest, rooms)
+  );
+
+  // 尚未分配的大人數量
+  const leftAdult = useMemo(() => {
+    return (
+      adult - allocations.reduce((acc, allocation) => acc + allocation.adult, 0)
+    );
+  }, [allocations]);
+
+  // 尚未分配的小孩數量
+  const leftChild = useMemo(() => {
+    return (
+      child - allocations.reduce((acc, allocation) => acc + allocation.child, 0)
+    );
+  }, [allocations]);
+
+  const handleAllocationChange = (index: number, newAllocation: Allocation) => {
+    const newAllocations = [...allocations];
+    newAllocations[index] = newAllocation;
+    setAllocations(newAllocations);
+  };
+  
+  // 當 allocations 改變時，觸發 onChange 回調
+  useEffect(() => {
+    onChange(allocations);
+  }, [allocations, onChange]);
+
+  useEffect(() => {
+    console.log("allocations", allocations);
+  }, [allocations]);
+
+  return (
+    <div className="p-4">
+      <p className="text-xl font-bold">{`住客人數：${adult} 位大人，${child} 位小孩`}</p>
+      <p>{`尚未分配人數：${leftAdult} 位大人，${leftChild} 位小孩`}</p>
+      {allocations.map((allocation, index) => (
+        <RoomPanel
+          key={index}
+          allocation={allocation}
+          onChange={(updatedAllocation: Allocation) => handleAllocationChange(index, updatedAllocation)}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default function Home() {
+  // 測試範例
+  const guest: Guest = { adult: 4, child: 3 };
+  const rooms: Room[] = [
+    { roomPrice: 100, adultPrice: 50, childPrice: 20, capacity: 4 },
+    { roomPrice: 150, adultPrice: 60, childPrice: 30, capacity: 3 },
+  ];
+
+  return (
+    <div>
+      <RoomAllocation
+        guest={guest}
+        rooms={rooms}
+         onChange={(result) => console.log(result)}
+      />
+    </div>
   );
 }
