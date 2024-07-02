@@ -37,4 +37,5 @@ onChange: (result: Allocation[]) => void;
 export interface RoomPanelProps {
   key: number;
   allocation: Allocation;
+  onChange: (allocation: Allocation) => void;
 }

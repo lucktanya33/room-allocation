@@ -7,11 +7,6 @@ import React, {
 import { Room, Guest, Allocation, RoomAllocationProps, RoomPanelProps } from "./type";
 import { CustomInputNumber } from "./CustomInputNumber";
 
-// 處理輸入變化事件
-const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  console.log(`Name: ${e.target.name}, Value: ${e.target.value}`);
-};
-
 // 處理輸入框失焦事件
 const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
   console.log(`Blur event on input: ${e.target.name}`);
@@ -37,11 +32,34 @@ const isValidAllocation = (allocation: Allocation[]): boolean => {
 const RoomPanel: React.FC<RoomPanelProps> = ({
   key,
   allocation,
+  onChange
 }) => {
   const [panelState, setPanelState] = useState({
     adult: allocation.adult,
     child: allocation.child
   })
+
+  const handleAdultChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newAdult = parseInt(e.target.value);
+    const newState = { ...panelState, adult: newAdult };
+    setPanelState(newState);
+    onChange({
+      ...allocation,
+      adult: newAdult,
+      // price: calculateRoomPrice(allocation, newAdult, newState.child),
+    });
+  };
+
+  const handleChildChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newChild = parseInt(e.target.value);
+    const newState = { ...panelState, child: newChild };
+    setPanelState(newState);
+    onChange({
+      ...allocation,
+      child: newChild,
+      // price: calculateRoomPrice(allocation, newState.adult, newChild),
+    });
+  };
 
   return (
     <div key={key} className="border my-2 p-2">
@@ -58,10 +76,12 @@ const RoomPanel: React.FC<RoomPanelProps> = ({
           step={1}
           name={`adult-${key}`}
           value={panelState.adult}
-          onChange={(e) => {
-            setPanelState({
-            child: panelState.child,
-            adult: parseInt(e.target.value)})}}
+          // onChange={(e) => {
+          //   console.log('e', e)
+          //   setPanelState({
+          //   child: panelState.child,
+          //   adult: parseInt(e.target.value)})}}
+          onChange={handleAdultChange}
           // onBlur={(e) => {
           //   handleInputBlur(e);
           // }}
@@ -76,10 +96,13 @@ const RoomPanel: React.FC<RoomPanelProps> = ({
           step={1}
           name={`child-${key}`}
           value={panelState.child}
-          onChange={(e) => {
-            setPanelState({
-            adult: panelState.adult,
-            child: parseInt(e.target.value)})}}
+          // onChange={(e) => {
+          //   console.log('e', e)
+          //   setPanelState({
+          //   adult: panelState.adult,
+          //   child: parseInt(e.target.value)})}}
+          onChange={handleChildChange}
+
           // onBlur={(e) => {
           //   handleInputBlur(e);
           // }}
@@ -196,13 +219,9 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
     );
   }, [allocations]);
 
-  const handleAllocationChange = (
-    index: number,
-    type: "adult" | "child",
-    value: number
-  ) => {
+  const handleAllocationChange = (index: number, newAllocation: Allocation) => {
     const newAllocations = [...allocations];
-    newAllocations[index][type] = value;
+    newAllocations[index] = newAllocation;
     setAllocations(newAllocations);
   };
   
@@ -223,6 +242,7 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
         <RoomPanel
           key={index}
           allocation={allocation}
+          onChange={(updatedAllocation: Allocation) => handleAllocationChange(index, updatedAllocation)}
         />
       ))}
     </div>
@@ -242,8 +262,7 @@ export default function Home() {
       <RoomAllocation
         guest={guest}
         rooms={rooms}
-        //  onChange={(result) => console.log(result)}
-        onChange={() => {}}
+         onChange={(result) => console.log(result)}
       />
     </div>
   );

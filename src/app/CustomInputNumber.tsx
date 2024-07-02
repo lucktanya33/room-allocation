@@ -12,8 +12,6 @@ export const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
     onBlur,
 
   }) => {
-    console.log('value', value)
-    console.log('max', max)
     const [currentValue, setCurrentValue] = useState<number>(value); // 使用 state 保存當前值
     const [disabledSetting, setdisabledSetting] = useState({
       increase: false,
