@@ -32,6 +32,7 @@ const isValidAllocation = (allocation: Allocation[]): boolean => {
 const RoomPanel: React.FC<RoomPanelProps> = ({
   key,
   allocation,
+  roomSetting,
   onChange
 }) => {
   const [panelState, setPanelState] = useState({
@@ -46,7 +47,7 @@ const RoomPanel: React.FC<RoomPanelProps> = ({
     onChange({
       ...allocation,
       adult: newAdult,
-      // price: calculateRoomPrice(allocation, newAdult, newState.child),
+      price: calculateRoomPrice(roomSetting, newAdult, newState.child),
     });
   };
 
@@ -57,7 +58,7 @@ const RoomPanel: React.FC<RoomPanelProps> = ({
     onChange({
       ...allocation,
       child: newChild,
-      // price: calculateRoomPrice(allocation, newState.adult, newChild),
+      price: calculateRoomPrice(roomSetting, newState.adult, newChild),
     });
   };
 
@@ -76,11 +77,6 @@ const RoomPanel: React.FC<RoomPanelProps> = ({
           step={1}
           name={`adult-${key}`}
           value={panelState.adult}
-          // onChange={(e) => {
-          //   console.log('e', e)
-          //   setPanelState({
-          //   child: panelState.child,
-          //   adult: parseInt(e.target.value)})}}
           onChange={handleAdultChange}
           // onBlur={(e) => {
           //   handleInputBlur(e);
@@ -96,11 +92,6 @@ const RoomPanel: React.FC<RoomPanelProps> = ({
           step={1}
           name={`child-${key}`}
           value={panelState.child}
-          // onChange={(e) => {
-          //   console.log('e', e)
-          //   setPanelState({
-          //   adult: panelState.adult,
-          //   child: parseInt(e.target.value)})}}
           onChange={handleChildChange}
 
           // onBlur={(e) => {
@@ -238,13 +229,17 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
     <div className="p-4">
       <p className="text-xl font-bold">{`住客人數：${adult} 位大人，${child} 位小孩`}</p>
       <p>{`尚未分配人數：${leftAdult} 位大人，${leftChild} 位小孩`}</p>
-      {allocations.map((allocation, index) => (
-        <RoomPanel
-          key={index}
-          allocation={allocation}
-          onChange={(updatedAllocation: Allocation) => handleAllocationChange(index, updatedAllocation)}
-        />
-      ))}
+      {allocations.map((allocation, index) => {
+        console.log('index', typeof index,index)
+        return(
+          <RoomPanel
+             key={index}
+             allocation={allocation}
+             roomSetting={rooms[index]}
+             onChange={(updatedAllocation: Allocation) => handleAllocationChange(index, updatedAllocation)}
+          />
+        )
+      })}
     </div>
   );
 };
