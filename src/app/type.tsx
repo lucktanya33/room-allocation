@@ -9,26 +9,32 @@ export interface CustomInputNumberProps {
     onBlur: (event: React.FocusEvent<HTMLInputElement>) => void; // 失去焦點事件處理函數
   }
 
-  export interface Room {
-    roomPrice: number;
-    adultPrice: number;
-    childPrice: number;
-    capacity: number;
-  }
-  
-  export interface Guest {
-    adult: number;
-    child: number;
-  }
-  
-  export interface Allocation {
-    adult: number;
-    child: number;
-    price: number;
-    capacity: number;
-  }
-  
-  export interface RoomAllocationProps {
-    guest: Guest;
-    rooms: Room[];
-    onChange: (result: Allocation[]) => void;
+export interface Room {
+roomPrice: number;
+adultPrice: number;
+childPrice: number;
+capacity: number;
+}
+
+export interface Guest {
+adult: number;
+child: number;
+}
+
+export interface Allocation {
+adult: number;
+child: number;
+price: number;
+capacity: number;
+}
+
+export interface RoomAllocationProps {
+guest: Guest;
+rooms: Room[];
+onChange: (result: Allocation[]) => void;
+}
+
+export interface RoomPanelProps {
+  key: number;
+  allocation: Allocation;
+}
