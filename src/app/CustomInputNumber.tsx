@@ -12,7 +12,13 @@ export const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
     onBlur,
 
   }) => {
+    console.log('value', value)
+    console.log('max', max)
     const [currentValue, setCurrentValue] = useState<number>(value); // 使用 state 保存當前值
+    const [disabledSetting, setdisabledSetting] = useState({
+      increase: false,
+      decrease: false,
+    });
     const intervalRef = useRef<NodeJS.Timeout | null>(null); // 保存 setInterval 的參考
   
     // 當外部的 value 改變時，同步更新當前值
@@ -52,12 +58,21 @@ export const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
     const handleMouseUp = () => {
       if (intervalRef.current) clearInterval(intervalRef.current); // 清除計時器
     };
+
+    useEffect(() => {
+      setdisabledSetting(prevState => ({
+        ...prevState,
+        increase: value >= max,
+        decrease: value <= min,
+      }));
+    }, [value, min, max]);
+    
   
     return (
       <div className="flex items-center" onBlur={onBlur}>
         <button
           type="button"
-          className={`border-cyan-400 text-cyan-400	w-12 h-12 border border-gray-300 rounded flex items-center justify-center ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+          className={`border-cyan-400 text-cyan-400	w-12 h-12 border border-gray-300 rounded flex items-center justify-center ${disabledSetting.decrease ? 'opacity-40 cursor-not-allowed' : ''}`}
           onClick={() => handleButtonClick(-step)}
           onMouseDown={() => handleMouseDown(-step)}
           onMouseUp={handleMouseUp}
@@ -80,7 +95,7 @@ export const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
         />
         <button
           type="button"
-          className={`border-cyan-600 text-cyan-600	w-12 h-12 border border-gray-300 rounded flex items-center justify-center ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+          className={`border-cyan-600 text-cyan-600	w-12 h-12 border border-gray-300 rounded flex items-center justify-center ${disabledSetting.increase ? 'opacity-40 cursor-not-allowed' : ''}`}
           onClick={() => handleButtonClick(step)}
           onMouseDown={() => handleMouseDown(step)}
           onMouseUp={handleMouseUp}
