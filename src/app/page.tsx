@@ -126,7 +126,8 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
 
   // 當 allocations 改變時，觸發 onChange 回調
   useEffect(() => {
-    onChange(allocations);
+    const result = allocations.map(({ capacity, ...rest }) => rest);
+    onChange(result);
   }, [allocations, onChange]);
 
   return (
@@ -153,11 +154,11 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
 
 export default function Home() {
   // 測試範例1
-  const guest = { adult: 4, child: 2
-  }
+  const guest = { adult: 4, child: 2 };
   const rooms = [
-  { roomPrice: 1000, adultPrice: 200, childPrice: 100, capacity: 4 }, { roomPrice: 0, adultPrice: 500, childPrice: 500, capacity: 4 },
-  ]
+    { roomPrice: 1000, adultPrice: 200, childPrice: 100, capacity: 4 },
+    { roomPrice: 0, adultPrice: 500, childPrice: 500, capacity: 4 },
+  ];
 
   // 測試範例2
   // const guest = { adult: 7, child: 3 };
@@ -173,8 +174,7 @@ export default function Home() {
       <RoomAllocation
         guest={guest}
         rooms={rooms}
-        // onChange={(result) => console.log(result)}
-        onChange={() => {}}
+        onChange={(result) => console.log(result)}
       />
     </div>
   );

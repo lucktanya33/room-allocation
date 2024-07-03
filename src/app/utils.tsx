@@ -1,6 +1,4 @@
-import {
-    Room,
-  } from "./type";
+import { Room } from "./type";
 
 export const calculateRoomPrice = (
   room: Room,
