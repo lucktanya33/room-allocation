@@ -1,10 +1,12 @@
 "use client";
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-} from "react";
-import { Room, Guest, Allocation, RoomAllocationProps, RoomPanelProps } from "./type";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Room,
+  Guest,
+  Allocation,
+  RoomAllocationProps,
+  RoomPanelProps,
+} from "./type";
 import { CustomInputNumber } from "./CustomInputNumber";
 
 // 處理輸入框失焦事件
@@ -30,15 +32,17 @@ const isValidAllocation = (allocation: Allocation[]): boolean => {
 };
 
 const RoomPanel: React.FC<RoomPanelProps> = ({
-  key,
+  index,
   allocation,
+  allocations,
+  guestSetting,
   roomSetting,
-  onChange
+  onChange,
 }) => {
   const [panelState, setPanelState] = useState({
     adult: allocation.adult,
-    child: allocation.child
-  })
+    child: allocation.child,
+  });
 
   const handleAdultChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAdult = parseInt(e.target.value);
@@ -62,8 +66,42 @@ const RoomPanel: React.FC<RoomPanelProps> = ({
     });
   };
 
+  // max 不能超過(1)此房間上限 以及 (2)大人數量上限
+  const maxAdult = useMemo(() => {
+    // 上限-總大人數量
+    // 計算其他索引中的 adult 總和
+    let theOtherAdults = 0;
+    for (let i = 0; i < allocations.length; i++) {
+      if (i !== index) {
+        theOtherAdults += allocations[i].adult;
+      }
+    }
+    const adultLimit = guestSetting.adult - theOtherAdults;
+    // 上限-此房間大人數量
+    const roomLimit = allocation.capacity - panelState.child;
+
+    return Math.min(adultLimit, roomLimit);
+  }, [panelState, allocations]);
+
+  // max 不能超過(1)此房間上限 以及 (2)小孩數量上限
+  const maxChild = useMemo(() => {
+    // 上限-總小孩數量
+    // 計算其他索引中的 child 總和
+    let theOtherChilds = 0;
+    for (let i = 0; i < allocations.length; i++) {
+      if (i !== index) {
+        theOtherChilds += allocations[i].child;
+      }
+    }
+    const childLimit = guestSetting.child - theOtherChilds;
+    // 上限-此房間小孩數量
+    const roomLimit = allocation.capacity - panelState.adult;
+
+    return Math.min(childLimit, roomLimit);
+  }, [panelState, allocations]);
+
   return (
-    <div key={key} className="border my-2 p-2">
+    <div key={index} className="border my-2 p-2">
       <p>{`此房間上限總人數${allocation.capacity}`}</p>
       <p>{`目前總人數：${allocation.adult + allocation.child}人`}</p>
       <div className="flex flex-row justify-between my-1">
@@ -73,31 +111,30 @@ const RoomPanel: React.FC<RoomPanelProps> = ({
         </div>
         <CustomInputNumber
           min={1}
-          max={allocation.capacity - panelState.child}
+          max={maxAdult}
           step={1}
-          name={`adult-${key}`}
+          name={`adult-${index}`}
           value={panelState.adult}
           onChange={handleAdultChange}
           // onBlur={(e) => {
           //   handleInputBlur(e);
           // }}
-          onBlur={()=> {}}
+          onBlur={() => {}}
         />
       </div>
       <div className="flex flex-row justify-between">
         <p>小孩</p>
         <CustomInputNumber
           min={0}
-          max={allocation.capacity - panelState.adult}
+          max={maxChild}
           step={1}
-          name={`child-${key}`}
+          name={`child-${index}`}
           value={panelState.child}
           onChange={handleChildChange}
-
           // onBlur={(e) => {
           //   handleInputBlur(e);
           // }}
-          onBlur={()=>{}}
+          onBlur={() => {}}
         />
       </div>
     </div>
@@ -215,42 +252,50 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
     newAllocations[index] = newAllocation;
     setAllocations(newAllocations);
   };
-  
+
   // 當 allocations 改變時，觸發 onChange 回調
   useEffect(() => {
     onChange(allocations);
   }, [allocations, onChange]);
-
-  useEffect(() => {
-    console.log("allocations", allocations);
-  }, [allocations]);
 
   return (
     <div className="p-4">
       <p className="text-xl font-bold">{`住客人數：${adult} 位大人，${child} 位小孩`}</p>
       <p>{`尚未分配人數：${leftAdult} 位大人，${leftChild} 位小孩`}</p>
       {allocations.map((allocation, index) => {
-        console.log('index', typeof index,index)
-        return(
+        return (
           <RoomPanel
-             key={index}
-             allocation={allocation}
-             roomSetting={rooms[index]}
-             onChange={(updatedAllocation: Allocation) => handleAllocationChange(index, updatedAllocation)}
+            index={index}
+            allocation={allocation}
+            allocations={allocations}
+            guestSetting={guest}
+            roomSetting={rooms[index]}
+            onChange={(updatedAllocation: Allocation) =>
+              handleAllocationChange(index, updatedAllocation)
+            }
           />
-        )
+        );
       })}
     </div>
   );
 };
 
 export default function Home() {
-  // 測試範例
+  // 測試範例1
   const guest: Guest = { adult: 4, child: 3 };
   const rooms: Room[] = [
     { roomPrice: 100, adultPrice: 50, childPrice: 20, capacity: 4 },
     { roomPrice: 150, adultPrice: 60, childPrice: 30, capacity: 3 },
   ];
+
+  // 測試範例2
+  // const guest = { adult: 7, child: 3 };
+  // const rooms = [
+  //   { roomPrice: 2000, adultPrice: 200, childPrice: 100, capacity: 4 },
+  //   { roomPrice: 2000, adultPrice: 200, childPrice: 100, capacity: 4 },
+  //   { roomPrice: 2000, adultPrice: 400, childPrice: 200, capacity: 2 },
+  //   { roomPrice: 2000, adultPrice: 400, childPrice: 200, capacity: 2 },
+  // ];
 
   return (
     <div>
