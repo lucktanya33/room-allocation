@@ -1,24 +1,8 @@
 "use client";
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-} from "react";
-import { Room, Guest, Allocation, RoomAllocationProps, RoomPanelProps } from "./type";
-import { CustomInputNumber } from "./CustomInputNumber";
-
-// 處理輸入框失焦事件
-const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-  console.log(`Blur event on input: ${e.target.name}`);
-};
-
-// 計算房間價格
-const calculateRoomPrice = (
-  room: Room,
-  adults: number,
-  children: number
-): number =>
-  room.roomPrice + room.adultPrice * adults + room.childPrice * children;
+import React, { useState, useEffect, useMemo } from "react";
+import { Room, Guest, Allocation, RoomAllocationProps } from "./type";
+import { RoomPanel } from "./RoomPanel";
+import { calculateRoomPrice } from "./utils";
 
 // 檢查分配是否有效
 const isValidAllocation = (allocation: Allocation[]): boolean => {
@@ -29,91 +13,6 @@ const isValidAllocation = (allocation: Allocation[]): boolean => {
   return true;
 };
 
-const RoomPanel: React.FC<RoomPanelProps> = ({
-  key,
-  allocation,
-  onChange
-}) => {
-  const [panelState, setPanelState] = useState({
-    adult: allocation.adult,
-    child: allocation.child
-  })
-
-  const handleAdultChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newAdult = parseInt(e.target.value);
-    const newState = { ...panelState, adult: newAdult };
-    setPanelState(newState);
-    onChange({
-      ...allocation,
-      adult: newAdult,
-      // price: calculateRoomPrice(allocation, newAdult, newState.child),
-    });
-  };
-
-  const handleChildChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newChild = parseInt(e.target.value);
-    const newState = { ...panelState, child: newChild };
-    setPanelState(newState);
-    onChange({
-      ...allocation,
-      child: newChild,
-      // price: calculateRoomPrice(allocation, newState.adult, newChild),
-    });
-  };
-
-  return (
-    <div key={key} className="border my-2 p-2">
-      <p>{`此房間上限總人數${allocation.capacity}`}</p>
-      <p>{`目前總人數：${allocation.adult + allocation.child}人`}</p>
-      <div className="flex flex-row justify-between my-1">
-        <div>
-          <p>大人</p>
-          <p className="text-neutral-400">年齡20+</p>
-        </div>
-        <CustomInputNumber
-          min={1}
-          max={allocation.capacity - panelState.child}
-          step={1}
-          name={`adult-${key}`}
-          value={panelState.adult}
-          // onChange={(e) => {
-          //   console.log('e', e)
-          //   setPanelState({
-          //   child: panelState.child,
-          //   adult: parseInt(e.target.value)})}}
-          onChange={handleAdultChange}
-          // onBlur={(e) => {
-          //   handleInputBlur(e);
-          // }}
-          onBlur={()=> {}}
-        />
-      </div>
-      <div className="flex flex-row justify-between">
-        <p>小孩</p>
-        <CustomInputNumber
-          min={0}
-          max={allocation.capacity - panelState.adult}
-          step={1}
-          name={`child-${key}`}
-          value={panelState.child}
-          // onChange={(e) => {
-          //   console.log('e', e)
-          //   setPanelState({
-          //   adult: panelState.adult,
-          //   child: parseInt(e.target.value)})}}
-          onChange={handleChildChange}
-
-          // onBlur={(e) => {
-          //   handleInputBlur(e);
-          // }}
-          onBlur={()=>{}}
-        />
-      </div>
-    </div>
-  );
-};
-
-// 計算最低價格分配方案/預設方案
 const getDefaultRoomAllocation = (
   guest: Guest,
   rooms: Room[]
@@ -224,45 +123,58 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
     newAllocations[index] = newAllocation;
     setAllocations(newAllocations);
   };
-  
+
   // 當 allocations 改變時，觸發 onChange 回調
   useEffect(() => {
     onChange(allocations);
   }, [allocations, onChange]);
 
-  useEffect(() => {
-    console.log("allocations", allocations);
-  }, [allocations]);
-
   return (
     <div className="p-4">
-      <p className="text-xl font-bold">{`住客人數：${adult} 位大人，${child} 位小孩`}</p>
+      <p className="text-xl font-bold">{`住客人數：${adult} 位大人，${child} 位小孩/ ${rooms.length}房`}</p>
       <p>{`尚未分配人數：${leftAdult} 位大人，${leftChild} 位小孩`}</p>
-      {allocations.map((allocation, index) => (
-        <RoomPanel
-          key={index}
-          allocation={allocation}
-          onChange={(updatedAllocation: Allocation) => handleAllocationChange(index, updatedAllocation)}
-        />
-      ))}
+      {allocations.map((allocation, index) => {
+        return (
+          <RoomPanel
+            index={index}
+            allocation={allocation}
+            allocations={allocations}
+            guestSetting={guest}
+            roomSetting={rooms[index]}
+            onChange={(updatedAllocation: Allocation) =>
+              handleAllocationChange(index, updatedAllocation)
+            }
+          />
+        );
+      })}
     </div>
   );
 };
 
 export default function Home() {
-  // 測試範例
-  const guest: Guest = { adult: 4, child: 3 };
-  const rooms: Room[] = [
-    { roomPrice: 100, adultPrice: 50, childPrice: 20, capacity: 4 },
-    { roomPrice: 150, adultPrice: 60, childPrice: 30, capacity: 3 },
-  ];
+  // 測試範例1
+  const guest = { adult: 4, child: 2
+  }
+  const rooms = [
+  { roomPrice: 1000, adultPrice: 200, childPrice: 100, capacity: 4 }, { roomPrice: 0, adultPrice: 500, childPrice: 500, capacity: 4 },
+  ]
+
+  // 測試範例2
+  // const guest = { adult: 7, child: 3 };
+  // const rooms = [
+  //   { roomPrice: 2000, adultPrice: 200, childPrice: 100, capacity: 4 },
+  //   { roomPrice: 2000, adultPrice: 200, childPrice: 100, capacity: 4 },
+  //   { roomPrice: 2000, adultPrice: 400, childPrice: 200, capacity: 2 },
+  //   { roomPrice: 2000, adultPrice: 400, childPrice: 200, capacity: 2 },
+  // ];
 
   return (
     <div>
       <RoomAllocation
         guest={guest}
         rooms={rooms}
-         onChange={(result) => console.log(result)}
+        // onChange={(result) => console.log(result)}
+        onChange={() => {}}
       />
     </div>
   );
