@@ -1,18 +1,8 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Room,
-  Guest,
-  Allocation,
-  RoomAllocationProps,
-} from "./type";
+import { Room, Guest, Allocation, RoomAllocationProps } from "./type";
 import { RoomPanel } from "./RoomPanel";
-import { calculateRoomPrice } from "./utils"
-
-// 處理輸入框失焦事件
-const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-  console.log(`Blur event on input: ${e.target.name}`);
-};
+import { calculateRoomPrice } from "./utils";
 
 // 檢查分配是否有效
 const isValidAllocation = (allocation: Allocation[]): boolean => {
@@ -141,7 +131,7 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
 
   return (
     <div className="p-4">
-      <p className="text-xl font-bold">{`住客人數：${adult} 位大人，${child} 位小孩`}</p>
+      <p className="text-xl font-bold">{`住客人數：${adult} 位大人，${child} 位小孩/ ${rooms.length}房`}</p>
       <p>{`尚未分配人數：${leftAdult} 位大人，${leftChild} 位小孩`}</p>
       {allocations.map((allocation, index) => {
         return (
@@ -163,11 +153,11 @@ const RoomAllocation: React.FC<RoomAllocationProps> = ({
 
 export default function Home() {
   // 測試範例1
-  const guest: Guest = { adult: 4, child: 3 };
-  const rooms: Room[] = [
-    { roomPrice: 100, adultPrice: 50, childPrice: 20, capacity: 4 },
-    { roomPrice: 150, adultPrice: 60, childPrice: 30, capacity: 3 },
-  ];
+  const guest = { adult: 4, child: 2
+  }
+  const rooms = [
+  { roomPrice: 1000, adultPrice: 200, childPrice: 100, capacity: 4 }, { roomPrice: 0, adultPrice: 500, childPrice: 500, capacity: 4 },
+  ]
 
   // 測試範例2
   // const guest = { adult: 7, child: 3 };
@@ -183,7 +173,8 @@ export default function Home() {
       <RoomAllocation
         guest={guest}
         rooms={rooms}
-         onChange={(result) => console.log(result)}
+        // onChange={(result) => console.log(result)}
+        onChange={() => {}}
       />
     </div>
   );
